@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monochrome Blog Platform</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        mono: {
+                            50: '#fafafa',
+                            100: '#f5f5f5',
+                            200: '#e5e5e5',
+                            300: '#d4d4d4',
+                            400: '#a3a3a3',
+                            500: '#737373',
+                            600: '#525252',
+                            700: '#404040',
+                            800: '#262626',
+                            900: '#171717',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome for minimal icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .sharp-edge {
+            border-radius: 0 !important;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            min-height: 100vh;
+        }
+        /* Custom scrollbar for minimalism */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body id="appBody" class="bg-neutral-900 text-neutral-100 min-h-screen flex flex-col justify-between selection:bg-neutral-700 selection:text-white">
+
+    <header class="w-full border-b border-neutral-700 bg-neutral-900/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex flex-wrap justify-between items-center gap-4 sharp-edge">
+        <div class="flex items-center space-x-3">
+            <h1 class="text-xl font-light tracking-widest uppercase">Monochrome Blog</h1>
+            <span class="text-xs px-2 py-0.5 border border-neutral-600 text-neutral-400 sharp-edge">Minimal 4-Card Edition</span>
+        </div>
+        <div class="flex items-center space-x-3 text-sm">
+            <button onclick="openSettingsModal()" class="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 border border-neutral-600 transition-colors sharp-edge flex items-center space-x-2">
+                <i class="fa-solid fa-gear"></i>
+                <span>背景・設定</span>
+            </button>
+            <button onclick="resetAllData()" class="px-4 py-2 bg-neutral-800 hover:bg-rose-950/60 border border-neutral-600 hover:border-rose-800 transition-colors sharp-edge text-neutral-400 hover:text-rose-200">
+                <i class="fa-solid fa-rotate-right mr-1"></i> リセット
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow p-4 md:p-8 flex items-center justify-center max-w-[1600px] mx-auto w-full">
+        <div class="w-full bg-neutral-950/70 backdrop-blur-md border border-neutral-700 p-4 md:p-8 sharp-edge shadow-2xl">
+            
+            <div class="mb-6 flex justify-between items-center border-b border-neutral-800 pb-4">
+                <div>
+                    <h2 class="text-lg font-light tracking-wide">Entries Table</h2>
+                    <p class="text-xs text-neutral-400">4つの四角いカードによるブロググリッド (透過率70% / 角丸なし)</p>
+                </div>
+                <div class="text-xs text-neutral-400 hidden sm:block">
+                    Auto-saved to LocalStorage
+                </div>
+            </div>
+
+            <!-- 4 Cards Horizontal Grid -->
+            <div id="cardsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Cards will be dynamically injected here -->
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="w-full border-t border-neutral-800 bg-neutral-900/80 backdrop-blur-md px-6 py-4 text-center text-xs text-neutral-500 sharp-edge">
+        &copy; 2026 Monochrome Blog Platform. All rights reserved. Designed with zero border-radius & monochrome minimalism.
+    </footer>
+
+    <div id="settingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-neutral-900 border border-neutral-700 w-full max-w-md p-6 sharp-edge shadow-2xl relative">
+            <button onclick="closeSettingsModal()" class="absolute top-4 right-4 text-neutral-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <h3 class="text-lg font-light tracking-wider mb-4 border-b border-neutral-800 pb-2">全体設定 (背景・テーマ)</h3>
+            
+            <div class="space-y-4 text-sm">
+                <div>
+                    <label class="block text-xs text-neutral-400 mb-1">背景カラー選択</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="color" id="bgColorPicker" onchange="updateGlobalBackground()" class="w-10 h-10 bg-transparent border border-neutral-700 cursor-pointer sharp-edge">
+                        <span class="text-xs text-neutral-400">単色背景を変更します</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs text-neutral-400 mb-1">背景画像 URL</label>
+                    <input type="text" id="bgImageUrlInput" placeholder="https://example.com/image.jpg" class="w-full bg-neutral-800 border border-neutral-700 p-2 text-neutral-200 sharp-edge focus:outline-none focus:border-neutral-500">
+                </div>
+
+                <div class="pt-2 flex justify-end space-x-2">
+                    <button onclick="closeSettingsModal()" class="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 sharp-edge">キャンセル</button>
+                    <button onclick="saveGlobalSettings()" class="px-4 py-2 bg-neutral-100 text-neutral-900 hover:bg-white sharp-edge font-medium">適用する</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="msgBox" class="fixed bottom-6 right-6 bg-neutral-800 border border-neutral-600 text-neutral-200 px-4 py-3 sharp-edge shadow-lg hidden z-50 text-sm flex items-center space-x-2">
+        <i id="msgIcon" class="fa-solid fa-circle-info text-neutral-400"></i>
+        <span id="msgText">Notification message</span>
+    </div>
+
+    <script>
+        // Default state configuration for 4 cards
+        const DEFAULT_CARDS = [
+            {
+                id: 1,
+                title: "Monochrome Dawn",
+                date: "2026-03-30",
+                textColor: "#f5f5f5",
+                cardColor: "#171717",
+                content: "白と黒のコントラストが生み出す、洗練されたミニマルなデザイン空間。角を一切作らないシャープなラインが特徴です。",
+                imageUrl: "https://placehold.co/600x400/262626/f5f5f5?text=Monochrome+01"
+            },
+            {
+                id: 2,
+                title: "Silence & Space",
+                date: "2026-03-31",
+                textColor: "#171717",
+                cardColor: "#e5e5e5",
+                content: "余白を贅沢に使い、視覚的なノイズを極限まで削ぎ落としたブログエントリー。カードごとの個別カラー設定が可能です。",
+                imageUrl: "https://placehold.co/600x400/d4d4d4/171717?text=Monochrome+02"
+            },
+            {
+                id: 3,
+                title: "Structured Grid",
+                date: "2026-04-01",
+                textColor: "#f5f5f5",
+                cardColor: "#262626",
+                content: "4枚の四角いカードが横並びに美しく並ぶテーブル構造。レスポンシブ対応によりモバイル端末でも快適に閲覧・編集が行えます。",
+                imageUrl: "https://placehold.co/600x400/404040/f5f5f5?text=Monochrome+03"
+            },
+            {
+                id: 4,
+                title: "Fluid Persistence",
+                date: "2026-04-02",
+                textColor: "#000000",
+                cardColor: "#ffffff",
+                content: "ローカルストレージ連携により、変更や画像アップロードの内容は自動で永続化されます。自由にカスタマイズをお楽しみください。",
+                imageUrl: "https://placehold.co/600x400/f5f5f5/171717?text=Monochrome+04"
+            }
+        ];
+
+        let blogState = {
+            cards: DEFAULT_CARDS,
+            globalBgColor: "#171717",
+            globalBgImage: ""
+        };
+
+        // Initialize App on load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadFromLocalStorage();
+            renderApp();
+        });
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('monochrome_blog_state_v1');
+            if (saved) {
+                try {
+                    blogState = JSON.parse(saved);
+                } catch (e) {
+                    console.error("Failed to parse saved state", e);
+                }
+            }
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('monochrome_blog_state_v1', JSON.stringify(blogState));
+        }
+
+        function showNotification(text, type = 'info') {
+            const box = document.getElementById('msgBox');
+            const msgText = document.getElementById('msgText');
+            const icon = document.getElementById('msgIcon');
+            
+            msgText.innerText = text;
+            icon.className = type === 'success' ? 'fa-solid fa-circle-check text-emerald-400' : 'fa-solid fa-circle-info text-neutral-400';
+            
+            box.classList.remove('hidden');
+            setTimeout(() => {
+                box.classList.add('hidden');
+            }, 3000);
+        }
+
+        function renderApp() {
+            // Apply global background
+            const body = document.getElementById('appBody');
+            if (blogState.globalBgImage && blogState.globalBgImage.trim() !== "") {
+                body.style.backgroundImage = `url('${blogState.globalBgImage}')`;
+                body.style.backgroundColor = blogState.globalBgColor;
+            } else {
+                body.style.backgroundImage = 'none';
+                body.style.backgroundColor = blogState.globalBgColor;
+            }
+
+            // Render 4 cards
+            const container = document.getElementById('cardsContainer');
+            container.innerHTML = '';
+
+            blogState.cards.forEach((card, index) => {
+                const cardEl = document.createElement('div');
+                cardEl.className = "flex flex-col border border-neutral-700 sharp-edge transition-all duration-200 shadow-lg overflow-hidden";
+                cardEl.style.backgroundColor = card.cardColor;
+                cardEl.style.color = card.textColor;
+
+                cardEl.innerHTML = `
+                    <!-- Card Header / Title & Customization Toolbar -->
+                    <div class="p-4 border-b border-neutral-700/40 flex flex-col space-y-3">
+                        <div class="flex justify-between items-center gap-2">
+                            <span class="text-xs uppercase tracking-widest opacity-60 font-mono">#0${index + 1}</span>
+                            <div class="flex items-center space-x-2 text-xs">
+                                <label class="cursor-pointer opacity-70 hover:opacity-100 flex items-center space-x-1" title="文字色変更">
+                                    <i class="fa-solid fa-font"></i>
+                                    <input type="color" value="${card.textColor}" onchange="updateCardProp(${card.id}, 'textColor', this.value)" class="w-5 h-5 opacity-0 absolute cursor-pointer">
+                                </label>
+                                <label class="cursor-pointer opacity-70 hover:opacity-100 flex items-center space-x-1" title="カード色変更">
+                                    <i class="fa-solid fa-palette"></i>
+                                    <input type="color" value="${card.cardColor}" onchange="updateCardProp(${card.id}, 'cardColor', this.value)" class="w-5 h-5 opacity-0 absolute cursor-pointer">
+                                </label>
+                            </div>
+                        </div>
+                        <input type="text" value="${escapeHtml(card.title)}" oninput="updateCardProp(${card.id}, 'title', this.value)" placeholder="タイトルを入力..." class="w-full bg-transparent font-medium text-base border-b border-current/20 pb-1 focus:outline-none focus:border-current placeholder:opacity-40 sharp-edge">
+                        <input type="date" value="${card.date}" onchange="updateCardProp(${card.id}, 'date', this.value)" class="w-full bg-transparent text-xs opacity-70 border-none focus:outline-none sharp-edge">
+                    </div>
+
+                    <!-- Card Image Area -->
+                    <div class="relative group bg-neutral-900/10 min-h-[160px] max-h-[200px] overflow-hidden flex items-center justify-center border-b border-neutral-700/40">
+                        ${card.imageUrl ? `
+                            <img src="${escapeHtml(card.imageUrl)}" alt="${escapeHtml(card.title)}" class="w-full h-full object-cover sharp-edge" onerror="this.src='https://placehold.co/600x400/262626/ffffff?text=Image+Error'">
+                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-3">
+                                <label class="px-3 py-1.5 bg-neutral-900/80 hover:bg-neutral-900 text-white text-xs cursor-pointer sharp-edge border border-neutral-600">
+                                    <i class="fa-solid fa-upload mr-1"></i> 変更
+                                    <input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(event, ${card.id})">
+                                </label>
+                                <button onclick="deleteCardImage(${card.id})" class="px-3 py-1.5 bg-rose-950/80 hover:bg-rose-900 text-rose-200 text-xs sharp-edge border border-rose-800">
+                                    <i class="fa-solid fa-trash mr-1"></i> 削除
+                                </button>
+                            </div>
+                        ` : `
+                            <div class="flex flex-col items-center justify-center p-6 text-center opacity-60">
+                                <i class="fa-regular fa-image text-2xl mb-2"></i>
+                                <span class="text-xs mb-3">画像がありません</span>
+                                <label class="px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-xs cursor-pointer sharp-edge border border-current/30">
+                                    <i class="fa-solid fa-upload mr-1"></i> 画像アップロード
+                                    <input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(event, ${card.id})">
+                                </label>
+                            </div>
+                        `}
+                    </div>
+
+                    <!-- Card Content / Body Area -->
+                    <div class="p-4 flex-grow flex flex-col">
+                        <textarea oninput="updateCardProp(${card.id}, 'content', this.value)" rows="5" placeholder="ブログ本文を入力してください..." class="w-full bg-transparent text-sm resize-none focus:outline-none placeholder:opacity-40 leading-relaxed sharp-edge">${escapeHtml(card.content)}</textarea>
+                    </div>
+                `;
+
+                container.appendChild(cardEl);
+            });
+        }
+
+        function updateCardProp(id, prop, value) {
+            const card = blogState.cards.find(c => c.id === id);
+            if (card) {
+                card[prop] = value;
+                saveToLocalStorage();
+            }
+        }
+
+        function handleImageUpload(event, id) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const card = blogState.cards.find(c => c.id === id);
+                if (card) {
+                    card.imageUrl = e.target.result;
+                    saveToLocalStorage();
+                    renderApp();
+                    showNotification("画像をアップロードしました", "success");
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function deleteCardImage(id) {
+            const card = blogState.cards.find(c => c.id === id);
+            if (card) {
+                card.imageUrl = "";
+                saveToLocalStorage();
+                renderApp();
+                showNotification("画像を削除しました");
+            }
+        }
+
+        function openSettingsModal() {
+            document.getElementById('bgColorPicker').value = blogState.globalBgColor;
+            document.getElementById('bgImageUrlInput').value = blogState.globalBgImage;
+            document.getElementById('settingsModal').classList.remove('hidden');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+
+        function updateGlobalBackground() {
+            const color = document.getElementById('bgColorPicker').value;
+            blogState.globalBgColor = color;
+            renderApp();
+        }
+
+        function saveGlobalSettings() {
+            blogState.globalBgColor = document.getElementById('bgColorPicker').value;
+            blogState.globalBgImage = document.getElementById('bgImageUrlInput').value;
+            saveToLocalStorage();
+            renderApp();
+            closeSettingsModal();
+            showNotification("設定を保存しました", "success");
+        }
+
+        function resetAllData() {
+            if (confirm("すべてのカード内容と設定を初期状態にリセットしますか？")) {
+                localStorage.removeItem('monochrome_blog_state_v1');
+                blogState = {
+                    cards: JSON.parse(JSON.stringify(DEFAULT_CARDS)),
+                    globalBgColor: "#171717",
+                    globalBgImage: ""
+                };
+                renderApp();
+                showNotification("初期状態にリセットしました");
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+    </script>
+</body>
+</html>
